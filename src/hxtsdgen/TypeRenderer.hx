@@ -9,8 +9,6 @@ class TypeRenderer {
     public static function renderType(ctx:Generator, t:Type, paren = false):String {
         inline function wrap(s) return if (paren) '($s)' else s;
 
-        trace(t);
-
         return switch (t) {
             case TInst(_.get() => cl, params):
                 switch [cl, params] {

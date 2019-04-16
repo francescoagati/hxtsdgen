@@ -180,16 +180,13 @@ class Generator {
                             parts.push(renderDoc(field.doc, indent));
 
                         var prefix = if (isStatic) "static " else "";
-                        trace(10);
                         switch [field.kind, field.type] {
                             case [FMethod(_), TFun(args, ret)]:{
-                                trace(11);
                                 parts.push(renderFunction(field.name, args, ret, field.params, indent, prefix));
 
                             }
                                 
                             case [FVar(_,write), _]:{
-                                trace(12);
                                 switch (write) {
                                     case AccNo|AccNever:
                                         prefix += "readonly ";
@@ -208,7 +205,6 @@ class Generator {
                     addField(field, false);
                 }
                 for (field in cl.statics.get()) {
-                    trace(field.name);
                     addField(field, true);
                 }
 
