@@ -92,17 +92,18 @@ class Generator {
 
     static function wrapInNamespace(exposedPath:Array<String>, fn:String->String->String):String {
         var name = exposedPath.pop();
-        return if (exposedPath.length == 0)
-            fn(name, "");
-        else
-            'export namespace ${exposedPath.join(".")} {\n${fn(name, "\t")}\n}';
+        return fn(name, "");
+        //return if (exposedPath.length == 0)
+        //    fn(name, "");
+        //else
+        //    'export namespace ${exposedPath.join(".")} {\n${fn(name, "\t")}\n}';
     }
 
     function generateFunctionDeclaration(cl:ClassType, f:ClassField):String {
         var exposePath = getExposePath(f.meta);
         if (exposePath == null)
             exposePath = cl.pack.concat([cl.name, f.name]);
-
+        
         return wrapInNamespace(exposePath, function(name, indent) {
             var parts = [];
             if (f.doc != null)
@@ -126,7 +127,10 @@ class Generator {
 
     function renderFunction(name:String, args:Array<{name:String, opt:Bool, t:Type}>, ret:Type, params:Array<TypeParameter>, indent:String, prefix:String):String {
         var tparams = renderTypeParams(params);
-        return '$indent$prefix$name$tparams(${renderArgs(this, args)}): ${renderType(this, ret)};';
+        var render_args = renderArgs(this, args);
+        var render_type = renderType(this, ret);
+
+        return '$indent$prefix$name$tparams(${render_args}): ${render_type};';
     }
 
     static function renderTypeParams(params:Array<TypeParameter>):String {
@@ -153,7 +157,6 @@ class Generator {
 
             {
                 var indent = indent + "\t";
-
                 var privateCtor = true;
                 if (cl.constructor != null) {
                     var ctor = cl.constructor.get();
@@ -177,12 +180,16 @@ class Generator {
                             parts.push(renderDoc(field.doc, indent));
 
                         var prefix = if (isStatic) "static " else "";
-
+                        trace(10);
                         switch [field.kind, field.type] {
-                            case [FMethod(_), TFun(args, ret)]:
+                            case [FMethod(_), TFun(args, ret)]:{
+                                trace(11);
                                 parts.push(renderFunction(field.name, args, ret, field.params, indent, prefix));
 
-                            case [FVar(_,write), _]:
+                            }
+                                
+                            case [FVar(_,write), _]:{
+                                trace(12);
                                 switch (write) {
                                     case AccNo|AccNever:
                                         prefix += "readonly ";
@@ -190,18 +197,21 @@ class Generator {
                                 }
                                 parts.push('$indent$prefix${field.name}: ${renderType(this, field.type)};');
 
+
+                            }
+
                             default:
                         }
                     }
                 }
-
                 for (field in cl.fields.get()) {
                     addField(field, false);
                 }
-
                 for (field in cl.statics.get()) {
+                    trace(field.name);
                     addField(field, true);
                 }
+
             }
 
             parts.push('$indent}');

@@ -9,6 +9,8 @@ class TypeRenderer {
     public static function renderType(ctx:Generator, t:Type, paren = false):String {
         inline function wrap(s) return if (paren) '($s)' else s;
 
+        trace(t);
+
         return switch (t) {
             case TInst(_.get() => cl, params):
                 switch [cl, params] {
@@ -31,6 +33,9 @@ class TypeRenderer {
                     case [{pack: [], name: "Int" | "Float"}, _]:
                         "number";
 
+                    case [{pack: [], name: "String"}, _]:
+                        "string";
+
                     case [{pack: [], name: "Bool"}, _]:
                         "boolean";
 
@@ -38,12 +43,14 @@ class TypeRenderer {
                         "void";
 
                     case [{pack: ["haxe", "extern"], name: "EitherType"}, [aT, bT]]:
+                        'any';
                         '${renderType(ctx, aT, true)} | ${renderType(ctx, bT, true)}';
 
                     default:
+                        'any';
                         // TODO: do we want to have a `type Name = Underlying` here maybe?
-                        renderType(ctx, ab.type.applyTypeParameters(ab.params, params), paren);
-                }
+                        //renderType(ctx, ab.type.applyTypeParameters(ab.params, params), paren);
+                } 
 
             case TAnonymous(_.get() => anon):
                 var fields = [];
@@ -74,7 +81,8 @@ class TypeRenderer {
                 '{ [key: string]: ${renderType(ctx, elemT)} }';
 
             default:
-                throw 'Cannot render type ${t.toString()} into a TypeScript declaration (TODO?)';
+                'any';
+                //throw 'Cannot render type ${t.toString()} into a TypeScript declaration (TODO?)';
         }
     }
 }
